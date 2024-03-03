@@ -1,0 +1,114 @@
+import java.sql.*;
+import java.util.Scanner;
+
+public class Transfer {
+    static final String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
+    static final String DB_URL = "jdbc:mysql://127.0.0.1:3306/finance?allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=UTF8&useSSL=false&serverTimezone=UTC";
+    static final String USER = "root";
+    static final String PASS = "123123";
+    public static boolean transferBalance(Connection connection,
+                             String sourceCard,
+                             String destCard, 
+                             double amount){
+		PreparedStatement pps = null;
+		ResultSet rs = null;
+		double sourceAmount = 0;
+		double destAmount = 0;
+		int n = 0;
+		try{
+			String sql1 = "select * from bank_card where b_number='"+sourceCard+"';"; 
+			connection.setAutoCommit(false);
+			pps = connection.prepareStatement(sql1);
+			rs = pps.executeQuery();
+			if(!rs.next()){
+				n=-1;
+			}
+			else{
+				String type = rs.getString("b_type");
+				if(type.equals("信用卡")){
+					n=-1;
+				}
+				else{
+					sourceAmount = rs.getDouble("b_balance");
+					if(sourceAmount<amount){
+						n=-1;
+					}
+					else{
+						String sql2 = "select * from bank_card where b_number='"+destCard+"';"; 
+						pps = connection.prepareStatement(sql2);
+						rs = pps.executeQuery();
+						if(!rs.next()){
+							n=-1;
+						}
+						else{
+							type = rs.getString("b_type");
+							destAmount = rs.getDouble("b_balance");
+							sourceAmount = sourceAmount-amount;
+							if(type.equals("信用卡")){
+								destAmount = destAmount-amount;
+							}
+							else{
+								destAmount = destAmount+amount;
+							}
+							String sql3 = "update bank_card set b_balance="+sourceAmount+" where b_number='"+sourceCard+"';"; 
+							pps = connection.prepareStatement(sql3);
+							pps.executeUpdate();
+							String sql4 = "update bank_card set b_balance="+destAmount+" where b_number='"+destCard+"';"; 
+							pps = connection.prepareStatement(sql4);
+							pps.executeUpdate();
+							connection.commit();
+							n=1;
+						}
+					}
+					
+				}
+			}
+		}catch (SQLException throwables) {
+            throwables.printStackTrace();
+        } finally {
+            try {
+				connection.rollback();
+                if (pps != null) {
+                    pps.close();
+                }
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
+        }
+		if(n<=0){
+			return false;
+		}
+		else{
+			return true;
+		}
+    }
+
+    // 不要修改main() 
+    public static void main(String[] args) throws Exception {
+
+        Scanner sc = new Scanner(System.in);
+        Class.forName(JDBC_DRIVER);
+
+        Connection connection = DriverManager.getConnection(DB_URL, USER, PASS);
+
+        while(sc.hasNext())
+        {
+            String input = sc.nextLine();
+            if(input.equals(""))
+                break;
+
+            String[]commands = input.split(" ");
+            if(commands.length ==0)
+                break;
+            String payerCard = commands[0];
+            String  payeeCard = commands[1];
+            double  amount = Double.parseDouble(commands[2]);
+            if (transferBalance(connection, payerCard, payeeCard, amount)) {
+              System.out.println("转账成功。" );
+            } else {
+              System.out.println("转账失败,请核对卡号，卡类型及卡余额!");
+            }
+        }
+    }
+
+}

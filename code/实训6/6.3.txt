@@ -1,0 +1,48 @@
+delimiter $$
+create procedure sp_transfer(
+	                 IN applicant_id int,      
+                     IN source_card_id char(30),
+					 IN receiver_id int, 
+                     IN dest_card_id char(30),
+					 IN	amount numeric(10,2),
+					 OUT return_code int)
+BEGIN
+	declare id1 int;
+	declare id2 int;
+	declare flag int;
+	declare balance int;
+	declare type1 char(20);
+	declare type2 char(20);
+	set flag =0;
+	select b_c_id into id1 from bank_card where (b_number=source_card_id);
+	if(id1=applicant_id) then
+		set flag=flag+1;
+	end if;
+	select b_c_id into id2 from bank_card where (b_number= dest_card_id);
+	if(id2=receiver_id) then
+		set flag=flag+1;
+	end if;
+	select b_type into type1 from bank_card where (b_number=source_card_id);
+	if(type1='储蓄卡') then
+		set flag=flag+1;
+	end if;
+	select b_balance into balance from bank_card where (b_number=source_card_id);
+	if(balance-amount>=0) then
+		set flag=flag+1;
+	end if;
+	set return_code =0;
+	if flag=4 then
+		set return_code = 1;
+	end if;
+	select b_type into type2 from bank_card where (b_number=dest_card_id);
+	if return_code =1 then
+		update bank_card set b_balance=b_balance - amount where b_number=source_card_id;
+		if(type2='储蓄卡')then
+			update bank_card set b_balance=b_balance + amount where b_number=dest_card_id;
+		else
+			update bank_card set b_balance=b_balance - amount where b_number=dest_card_id;
+		end if;
+	end if;
+END$$
+
+delimiter ;

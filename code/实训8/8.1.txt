@@ -1,0 +1,15 @@
+delimiter $$
+create function get_deposit(client_id int)
+returns numeric(10,2) 
+begin
+	declare total numeric(10,2);
+	select sum(b_balance) into total from bank_card where b_c_id=client_id and b_type like '储%' group by b_c_id;
+	return total;
+
+end$$
+delimiter ;
+
+select distinct c_id_card,c_name,get_deposit(c_id) as total_deposit
+from client,bank_card
+where c_id=b_c_id and get_deposit(c_id)>=1000000
+order by total_deposit desc;

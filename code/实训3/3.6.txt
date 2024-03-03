@@ -1,0 +1,4 @@
+select pro_income,COUNT(*) as presence
+from property
+group by pro_income
+having count(*) >= all(select COUNT(*) from property group by pro_income);

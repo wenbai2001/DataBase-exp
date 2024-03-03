@@ -1,0 +1,98 @@
+delimiter $$
+create procedure sp_night_shift_arrange(in start_date date, in end_date date)
+begin
+	declare done int default false;
+	declare d int default(0);
+	declare t int default(0);
+	declare senior int default(0);
+	declare doctor char(8);
+	declare nurse1,nurse2 char(8);
+	declare doctor_cursor cursor for select e_type from employee where e_type=1 or e_type=2;
+	declare sen_cursor cursor for select e_name from employee where e_type=1;
+	declare doc_cursor cursor for select e_name from employee where e_type=2;
+	declare nur_cursor cursor for select e_name from employee where e_type=3;
+	DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+	open doctor_cursor;
+	open sen_cursor;
+	open doc_cursor;
+	open nur_cursor;
+	while start_date<=end_date do
+		set start_date=date_format(start_date,'%Y-%m-%d');
+		set d=weekday(start_date);
+		if (d<5 and senior>0) then
+			fetch sen_cursor into doctor;
+			if done then
+				set done=false;
+				close sen_cursor;
+				open sen_cursor;
+				fetch sen_cursor into doctor;
+			end if;
+			set senior=senior-1;
+		else
+			fetch doctor_cursor into t;
+			if done then
+				set done=false;
+				close doctor_cursor;
+				open doctor_cursor;
+				fetch doctor_cursor into t;
+			end if;
+			if(d>4) then
+				while t=1 do
+					fetch doctor_cursor into t;
+					if done then
+						set done=false;
+						close doctor_cursor;
+						open doctor_cursor;
+						fetch doctor_cursor into t;
+					end if;
+					set senior=senior+1;
+				end while;
+				fetch doc_cursor into doctor;
+				if done then
+					set done=false;
+					close doc_cursor;
+					open doc_cursor;
+					fetch doc_cursor into doctor;
+				end if;
+			else 
+				if t=1 then
+					fetch sen_cursor into doctor;
+					if done then
+						set done=false;
+						close sen_cursor;
+						open sen_cursor;
+						fetch sen_cursor into doctor;
+					end if;
+				else 
+					fetch doc_cursor into doctor;
+					if done then
+						set done=false;
+						close doc_cursor;
+						open doc_cursor;
+						fetch doc_cursor into doctor;
+					end if;
+				end if;
+			end if;
+		end if;
+		fetch nur_cursor into nurse1;
+		if done then
+			set done=false;
+			close nur_cursor;
+			open nur_cursor;
+			fetch nur_cursor into nurse1;
+		end if;
+		fetch nur_cursor into nurse2;
+		if done then
+			set done=false;
+			close nur_cursor;
+			open nur_cursor;
+			fetch nur_cursor into nurse2;
+		end if;
+		insert into night_shift_schedule(n_date,n_doctor_name,n_nurse1_name,n_nurse2_name) value(start_date,doctor,nurse1,nurse2);
+		set start_date=date_add(start_date,interval 1 day);
+	end while;
+end$$
+
+delimiter ;
+

@@ -1,0 +1,20 @@
+select t1.pro_c_id as c_id1, t3.pro_c_id as c_id2
+        from(
+            select t2.pro_c_id, group_concat(distinct t2.pro_pif_id order by t2.pro_pif_id) as pro_id
+            from(
+                select property.pro_c_id, property.pro_pif_id
+                from property
+                where property.pro_type=3
+            ) as t2
+            group by property.pro_c_id
+        ) as t1
+        inner join(
+            select t4.pro_c_id, group_concat(distinct t4.pro_pif_id order by t4.pro_pif_id) as pro_id
+            from(
+                select property.pro_c_id, property.pro_pif_id
+                from property
+                where property.pro_type=3
+            ) as t4
+            group by property.pro_c_id
+        ) as t3
+        on (t1.pro_id=t3.pro_id)and(t1.pro_c_id<t3.pro_c_id);

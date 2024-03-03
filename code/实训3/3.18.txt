@@ -1,0 +1,5 @@
+select b.b_c_id,sum(b.b_balance) as credit_card_amount
+from bank_card b,(select * from bank_card where b_type like '信%' and b_balance>5000) a
+where  b.b_c_id=a.b_c_id and b.b_type like '信%'
+group by b.b_c_id
+order by b.b_c_id;

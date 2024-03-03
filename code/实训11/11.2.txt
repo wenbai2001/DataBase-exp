@@ -1,0 +1,2 @@
+mysqldump -h 127.0.0.1 -u root --databases train > train_bak.sql
+mysqladmin -u root flush-logs

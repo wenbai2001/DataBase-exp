@@ -1,0 +1,38 @@
+select c_id,c_name,ifnull(t3.total_amount,0) as total_property 
+from client
+left join (
+	select pro_c_id,sum(total_amount1) as total_amount
+	from(
+		select pro_c_id,sum(quantity*amount) as total_amount1 
+		from (
+			select pro_c_id,pro_quantity as quantity, p_amount as amount 
+			from property,finances_product 
+			where pro_type=1 and pro_pif_id=p_id 
+			union all 
+			select pro_c_id,pro_quantity as quantity, i_amount as amount 
+			from property,insurance 
+			where pro_type=2 and pro_pif_id=i_id 
+			union all 
+			select pro_c_id,pro_quantity as quantity, f_amount as amount
+			from property,fund 
+			where pro_type=3 and pro_pif_id=f_id)t1 
+		group by pro_c_id
+		union all
+		select pro_c_id,sum(pro_income) as total_amount1
+		from property
+		group by pro_c_id
+		union all
+		select b_c_id as pro_c_id,sum(b_balance) as total_amount1
+		from bank_card
+		where b_type like '储%'
+		group by b_c_id
+		union all
+		select b_c_id as pro_c_id,sum(0-b_balance) as total_amount1
+		from bank_card
+		where b_type like '信%'
+		group by b_c_id
+		) as t2
+	group by pro_c_id
+	) as t3
+on c_id=pro_c_id 
+order by c_id;

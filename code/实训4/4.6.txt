@@ -1,0 +1,4 @@
+UPDATE property
+JOIN client
+ON pro_c_id=c_id
+SET pro_id_card=c_id_card;

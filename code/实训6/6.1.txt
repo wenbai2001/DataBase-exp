@@ -1,0 +1,17 @@
+	declare n int default 2;
+	declare a int default 0;
+	declare b int default 1;
+	declare c int default 0;
+	truncate table fibonacci;
+	insert into fibonacci(n,fibn) value(0,0);
+	if m>1
+		then
+			insert into fibonacci(n,fibn) value(1,1);
+	end if;
+	while n<m do
+			set c=a+b;
+			insert into fibonacci(n,fibn) value(n,c);
+			set a=b;
+			set b=c;
+			set n=n+1;
+	end while;

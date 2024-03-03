@@ -1,0 +1,5 @@
+select c_name,c_mail,c_phone
+from client, property p1,property p2  
+where p1.pro_c_id = c_id and p2.pro_c_id = c_id and p1.pro_type = 3 and p2.pro_type = 2 
+group by c_id
+order by c_id;

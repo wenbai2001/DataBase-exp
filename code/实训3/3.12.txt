@@ -1,0 +1,19 @@
+select c_name,c_id_card,ifnull(bb.total_amount,0) as total_amount 
+from client
+left join (
+	select pro_c_id,sum(quantity*amount) as total_amount 
+	from (
+		select pro_c_id,pro_quantity as quantity, p_amount as amount 
+		from property,finances_product 
+		where pro_type=1 and pro_pif_id=p_id 
+		union all 
+		select pro_c_id,pro_quantity as quantity, i_amount as amount 
+		from property,insurance 
+		where pro_type=2 and pro_pif_id=i_id 
+		union all 
+		select pro_c_id,pro_quantity as quantity, f_amount as amount
+		from property,fund 
+		where pro_type=3 and pro_pif_id=f_id) aa
+	group by pro_c_id) as bb
+on c_id=pro_c_id 
+order by total_amount desc;
